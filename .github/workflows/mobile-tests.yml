@@ -36,6 +36,14 @@ jobs:
           sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
           xcodebuild -version
 
+      - name: Prepare Xcode & CoreSimulator
+        run: |
+          sudo xcode-select --reset
+          sudo xcodebuild -license accept
+          xcodebuild -runFirstLaunch
+          # Warm up CoreSimulator — first simctl call can time out on a cold runner
+          for i in 1 2 3; do xcrun simctl list devices && break || sleep 10; done
+
       - name: Install dependencies
         run: npm ci
 
