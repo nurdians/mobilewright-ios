@@ -54,11 +54,18 @@ jobs:
         run: |
           UDID=$(xcrun simctl list devices available | grep -m1 -oE '[0-9A-F-]{36}')
           xcrun simctl boot "$UDID"
+          xcrun simctl bootstatus "$UDID"   # block until fully booted
           sleep 5
           xcrun simctl list devices booted
 
       - name: Install mobilecli agent (per-device, required)
-        run: npx mobilewright install
+        run: |
+          for i in 1 2 3 4 5; do
+            npx mobilewright install && exit 0
+            echo "attempt $i failed, retrying in 10s..."
+            sleep 10
+          done
+          exit 1
 
       - name: Build & install demo app
         run: |
