@@ -200,17 +200,19 @@ export { expect };
 
 **Verifikasi lulus:** `npm run lint` + `typecheck` + `format:check` bersih ✅
 
-### Fase 7 — CI/CD GitHub Actions ⏳ menunggu push ke GitHub
+### Fase 7 — CI/CD GitHub Actions ✅ selesai — run hijau di GitHub
 
-`.github/workflows/mobile-tests.yml` (sudah dibuat):
+`.github/workflows/mobile-tests.yml`:
 
 - **Trigger:** `push`/`pull_request` ke `main` + `workflow_dispatch`.
-- **Job `lint`** (ubuntu): `npm ci` → lint → format:check → typecheck.
-- **Job `ios-tests`** (macos-15): checkout → setup Node 22 → select Xcode → `npm ci` → `mobilewright doctor` → boot simulator → **`npx mobilewright install` (agent — wajib, lihat Fase 1)** → build + install Milliways → `mobilewright test --reporter html,junit` → upload artefak saat failure + junit summary.
-- **Catatan:** langkah `xcodebuild -downloadPlatform iOS` dari draft awal **tidak diperlukan** bila runtime sudah termasuk; di GitHub runner perlu dicek saat run pertama (runtime iOS umumnya sudah prebuilt di image `macos-15`).
+- **Job `lint`** (ubuntu): `npm ci` → lint → format:check → typecheck — **✓ 15s**.
+- **Job `ios-tests`** (macos-15): checkout → setup Node 22 → select Xcode → **Prepare Xcode & CoreSimulator** (accept license + warm-up `simctl`) → `npm ci` → `mobilewright doctor` → boot simulator (**`simctl bootstatus`** — blocking sampai benar-benar siap) → **install agent dengan retry loop** → build + install Milliways → `mobilewright test --reporter html,junit` → upload artefak — **✓ 10m34s**.
+- **2 fix yang dibutuhkan saat run pertama** (tercatat di commit `18e5811`, `fbb8901`):
+  1. `xcrun simctl list` **timeout di cold runner** → fix: `xcode-select --reset` + `xcodebuild -license accept` + `-runFirstLaunch` + warm-up `simctl list` ber-retry sebelum doctor.
+  2. **"No online devices found"** saat install agent → `simctl boot` mengembalikan control sebelum SpringBoard siap → fix: `xcrun simctl bootstatus` (blocking) + retry loop pada `mobilewright install`.
 - **Opsional tahap lanjut:** shard paralel + `merge-reports`.
 
-**Verifikasi lulus:** workflow hijau di GitHub — **belum diverifikasi** (butuh repo di-push).
+**Verifikasi lulus:** workflow hijau di GitHub ✅ (run `44318456465`, 18 Nov 2026)
 
 ### Fase 8 — Dokumentasi README
 
@@ -249,7 +251,7 @@ Fase 5 & 6 bisa paralel dengan Fase 4. Fase 7 menyusul setelah suite stabil loka
 - [x] Struktur POM & fixtures sesuai §3; tidak ada locator mentah di `tests/`
 - [x] HTML report terbukti memuat video on-failure saat test gagal (bug Milliways tertangkap)
 - [x] `npm run lint` & `npm run format` & `npm run typecheck` bersih
-- [x] Workflow GitHub Actions dibuat (`.github/workflows/mobile-tests.yml`) — verifikasi hijau menunggu push ke GitHub
+- [x] Workflow GitHub Actions hijau di GitHub (lint ✓ 15s + ios-tests ✓ 10m34s, run `44318456465`)
 - [x] README lengkap (setup → run → tambah test baru)
 
 ### Catatan implementasi (18 Nov 2026)
