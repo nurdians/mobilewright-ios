@@ -1,0 +1,36 @@
+{
+  "name": "mobilewright-ios",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Mobile automation test framework for iOS using Mobilewright",
+  "type": "module",
+  "scripts": {
+    "doctor": "mobilewright doctor",
+    "test": "mobilewright test",
+    "test:smoke": "mobilewright test tests/smoke",
+    "test:e2e": "mobilewright test tests/e2e",
+    "test:regression": "mobilewright test tests/regression",
+    "report": "mobilewright show-report",
+    "list": "mobilewright test --list",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit",
+    "app:build": "bash scripts/build-app.sh",
+    "app:install": "bash scripts/install-app.sh"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "@mobilewright/test": "^0.0.70",
+    "@types/node": "^26.6.6",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "eslint": "^9.0.0",
+    "eslint-plugin-playwright": "^2.0.0",
+    "mobilewright": "^0.0.70",
+    "prettier": "^3.0.0",
+    "typescript": "~5.9.0",
+    "typescript-eslint": "^8.73.0"
+  }
+}

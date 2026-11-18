@@ -1,0 +1,10 @@
+{
+  "staging": {
+    "email": "staging.test@example.com",
+    "password": "staging-password123"
+  },
+  "production": {
+    "email": "prod.test@example.com",
+    "password": "prod-password123"
+  }
+}

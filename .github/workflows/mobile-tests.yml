@@ -1,0 +1,80 @@
+name: mobile-tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run format:check
+      - run: npm run typecheck
+
+  ios-tests:
+    runs-on: macos-15
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Select Xcode
+        run: |
+          sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+          xcodebuild -version
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify environment
+        run: npx mobilewright doctor
+
+      - name: Boot simulator
+        run: |
+          UDID=$(xcrun simctl list devices available | grep -m1 -oE '[0-9A-F-]{36}')
+          xcrun simctl boot "$UDID"
+          sleep 5
+          xcrun simctl list devices booted
+
+      - name: Install mobilecli agent (per-device, required)
+        run: npx mobilewright install
+
+      - name: Build & install demo app
+        run: |
+          npm run app:build
+          npm run app:install
+
+      - name: Run tests
+        run: npx mobilewright test --reporter html,junit
+
+      - name: Upload report & artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report
+          path: |
+            mobilewright-report/
+            test-results/
+          retention-days: 14
+
+      - name: Upload junit summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: junit-results
+          path: test-results/*.xml
+          if-no-files-found: ignore
+          retention-days: 14
